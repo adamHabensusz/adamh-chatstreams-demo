@@ -1,0 +1,14 @@
+{
+  "name": "hybrid-cloud-chat-homepage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hybrid cloud chat homepage packaged for IBM Cloud Code Engine.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
