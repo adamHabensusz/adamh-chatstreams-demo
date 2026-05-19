@@ -404,6 +404,7 @@ const state = {
   draftByThreadId: {},
   extraMessagesByThreadId: {},
   threadSizes: [],
+  resourceSplit: 0.28,
   sections: {
     attention: true,
     tasks: false,
@@ -826,6 +827,10 @@ function getResourceMessages(resource) {
   ];
 }
 
+function buildResourceColumns() {
+  return `minmax(280px, ${state.resourceSplit}fr) 28px minmax(0, ${1 - state.resourceSplit}fr)`;
+}
+
 function renderResourceWorkspace(resource) {
   const headerMetrics = resource.widgets.headerMetrics || [];
   const summary = resource.widgets.summary || [];
@@ -837,7 +842,7 @@ function renderResourceWorkspace(resource) {
   const incidents = resource.widgets.incidents || [];
 
   return `
-    <div class="resource-workspace">
+    <div class="resource-workspace resource-workspace--resizable" style="grid-template-columns: ${buildResourceColumns()};">
       <div class="resource-chat-rail">
         <div class="resource-chat-history conversation-list">
           ${getResourceMessages(resource).map(renderConversationMessage).join("")}
@@ -858,6 +863,16 @@ function renderResourceWorkspace(resource) {
             </button>
           </div>
         </div>
+      </div>
+      <div
+        class="chat-stream-divider resource-workspace-divider"
+        data-resource-resize-divider="true"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize resource layout"
+        tabindex="0"
+      >
+        <span class="chat-stream-divider__line" aria-hidden="true"></span>
       </div>
       <div class="resource-dashboard">
         <div class="resource-inline-header">
@@ -1340,6 +1355,59 @@ function bindEvents() {
         }
       });
     });
+  }
+
+  const resourceWorkspace = document.querySelector(".resource-workspace--resizable");
+
+  if (resourceWorkspace) {
+    const applyResourceResize = (clientX) => {
+      const rect = resourceWorkspace.getBoundingClientRect();
+      const handleWidth = 28;
+      const availableWidth = rect.width - handleWidth;
+      const nextRatio = (clientX - rect.left) / availableWidth;
+      const minSize = 0.2;
+      const maxSize = 0.5;
+      state.resourceSplit = Math.max(minSize, Math.min(maxSize, nextRatio));
+      resourceWorkspace.style.gridTemplateColumns = buildResourceColumns();
+    };
+
+    const nudgeResourceResize = (direction) => {
+      const minSize = 0.2;
+      const maxSize = 0.5;
+      state.resourceSplit = Math.max(minSize, Math.min(maxSize, state.resourceSplit + direction * 0.03));
+      resourceWorkspace.style.gridTemplateColumns = buildResourceColumns();
+    };
+
+    const divider = document.querySelector("[data-resource-resize-divider]");
+
+    if (divider) {
+      divider.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        document.body.classList.add("is-resizing");
+
+        const onMove = (moveEvent) => applyResourceResize(moveEvent.clientX);
+        const onUp = () => {
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+          document.body.classList.remove("is-resizing");
+        };
+
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mouseup", onUp);
+      });
+
+      divider.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          nudgeResourceResize(-1);
+        }
+
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          nudgeResourceResize(1);
+        }
+      });
+    }
   }
 
   document.querySelectorAll(".chat-input-wrap").forEach((wrap) => {

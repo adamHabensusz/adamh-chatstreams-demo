@@ -649,6 +649,11 @@ button {
   align-items: start;
 }
 
+.resource-workspace--resizable {
+  gap: 0;
+  align-items: stretch;
+}
+
 .resource-chat-rail {
   position: sticky;
   top: 0;
@@ -660,6 +665,21 @@ button {
   padding: 24px 18px 24px 0;
   border-right: 1px solid #e8ebf0;
 }
+
+.resource-workspace-divider {
+  align-self: stretch;
+  min-height: 100%;
+}
+
+.resource-workspace-divider .chat-stream-divider__line {
+  display: none;
+}
+
+.resource-workspace-divider::after {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
 
 .resource-chat-history {
   flex: 1;
@@ -684,6 +704,7 @@ button {
   display: grid;
   align-content: start;
   gap: 28px;
+  padding-left: 12px;
   padding-top: 28px;
 }
 
